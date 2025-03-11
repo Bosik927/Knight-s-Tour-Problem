@@ -1,51 +1,60 @@
 package com.example.demo.test
 
 fun main(args: Array<String>) {
-    KnightAllPositionsChecker().checkAllPositions()
+    println(KnightAllPositionsChecker().checkAllPositions())
 }
 
 class KnightAllPositionsChecker(
-    private val width: Int = 8, private val height: Int = 8
+    private val width: Int = 100, private val height: Int = 19
 ) {
 
+    //Primitive brute force:
+    // 45ms to 95ms for 8x8
+    // 141ms to 174ms for 12x12
+    // 0.9s to 1.1s for 20x20
 
-    fun checkAllPositions() {
-        if (width < 3 || height < 3) {
+    //Optimized brute force:
+    // 40 ms for 20x20
+    // 40 ms for 25x25
+    // 100 ms for 40x40
+    fun checkAllPositions(): Boolean {
+        if (width < 2 || height < 2) {
             println("Board is too small")
-            return
+            return false
         }
         val calculator = KnightPositionsCalculator(width, height)
-
         val startTime = System.currentTimeMillis()
+
         for (x in 0 until width) {
             for (y in 0 until height) {
-                println("Checking for starting position: $x, $y")
                 val visitedBoard = Array(width) { IntArray(height) }
                 visitedBoard[x][y] = 1
-                deepCalculation(visitedBoard, calculator, x, y, 1)
+
+                if (deepCalculation(visitedBoard, calculator, x, y, 2)) {
+                    val endTime = System.currentTimeMillis()
+                    println("Time: ${endTime - startTime}ms")
+                    return true
+                }
+
             }
         }
-        val endTime = System.currentTimeMillis()
-        println("Time taken: ${endTime - startTime} ms")
 
-        return
+        return false
     }
 
 
-    fun deepCalculation(
+    private fun deepCalculation(
         visitedBoard: Array<IntArray>, calculator: KnightPositionsCalculator, x: Int, y: Int, count: Int
-    ) {
+    ): Boolean {
         if (visitedBoard.all { it.all { it > 0 } }) {
-            println("All positions visited")
-            println(visitedBoard)
-            return
+            printBoard(visitedBoard)
+            return true
         }
 
         val possiblePositions =
             calculator.calculate(x + 1, y + 1).filter { (nx, ny) -> visitedBoard[nx - 1][ny - 1] == 0 }
         if (possiblePositions.isEmpty()) {
-            println("No more possible moves")
-            return
+            return false
         }
 
         possiblePositions.forEach {
@@ -54,9 +63,17 @@ class KnightAllPositionsChecker(
             val americanX = it.first - 1
             val americanY = it.second - 1
             copy[americanX][americanY] = count
-            deepCalculation(
-                copy, calculator, americanX, americanY, count + 1
-            )
+            if (deepCalculation(copy, calculator, americanX, americanY, count + 1)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun printBoard(board: Array<IntArray>) {
+        println("Board (${board.size}x${board[0].size}):")
+        board.forEach { row ->
+            println(row.joinToString(" ") { "%2d".format(it) }) // Aligns numbers with spacing
         }
     }
 }
