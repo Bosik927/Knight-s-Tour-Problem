@@ -5,18 +5,9 @@ fun main(args: Array<String>) {
 }
 
 class KnightAllPositionsChecker(
-    private val width: Int = 100, private val height: Int = 19
+    private val width: Int = 8, private val height: Int = 8
 ) {
 
-    //Primitive brute force:
-    // 45ms to 95ms for 8x8
-    // 141ms to 174ms for 12x12
-    // 0.9s to 1.1s for 20x20
-
-    //Optimized brute force:
-    // 40 ms for 20x20
-    // 40 ms for 25x25
-    // 100 ms for 40x40
     fun checkAllPositions(): Boolean {
         if (width < 2 || height < 2) {
             println("Board is too small")
@@ -30,7 +21,8 @@ class KnightAllPositionsChecker(
                 val visitedBoard = Array(width) { IntArray(height) }
                 visitedBoard[x][y] = 1
 
-                if (deepCalculation(visitedBoard, calculator, x, y, 2)) {
+                println("Checking position ($x, $y)")
+                if (deepCalculation(visitedBoard.copyOf(), calculator, x, y, 2)) {
                     val endTime = System.currentTimeMillis()
                     println("Time: ${endTime - startTime}ms")
                     return true
@@ -52,14 +44,15 @@ class KnightAllPositionsChecker(
         }
 
         val possiblePositions =
-            calculator.calculate(x + 1, y + 1).filter { (nx, ny) -> visitedBoard[nx - 1][ny - 1] == 0 }
+            calculator.calculate(x + 1, y + 1)
+                .filter { (nx, ny) -> visitedBoard[nx - 1][ny - 1] == 0 }
         if (possiblePositions.isEmpty()) {
             return false
         }
 
         possiblePositions.forEach {
             //Jump
-            val copy = visitedBoard.copyOf()
+            val copy = visitedBoard.map { it.clone() }.toTypedArray()
             val americanX = it.first - 1
             val americanY = it.second - 1
             copy[americanX][americanY] = count
